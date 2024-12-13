@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sender</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.3/socket.io.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(120deg, #84fab0, #8fd3f4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 1.5rem;
+            color: #4CAF50;
+            font-size: 2rem;
+        }
+
+        input {
+            width: calc(100% - 24px);
+            padding: 10px;
+            margin-bottom: 1rem;
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0.5rem 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+
+        li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        li:last-child {
+            border-bottom: none;
+        }
+
+        /* Scrollbar styling */
+        ul::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ul::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 5px;
+        }
+
+        ul::-webkit-scrollbar-thumb {
+            background: #4CAF50;
+            border-radius: 5px;
+        }
+
+        ul::-webkit-scrollbar-thumb:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sender Page</h1>
+        <input id="message" type="text" placeholder="Enter your message">
+        <div>
+            <button id="sendBtn" onclick="sendMessage()" disabled>Send</button>
+            <button id="clearBtn" onclick="clearMessages()" disabled>Clear</button>
+        </div>
+        <ul id="messages"></ul>
+    </div>
+
+    <script>
+        const socket = io();
+        const params = new URLSearchParams(window.location.search);
+        const room = params.get('room');
+
+        const sendBtn = document.getElementById("sendBtn");
+        const clearBtn = document.getElementById("clearBtn");
+
+        socket.emit("join_room", { room, role: "sender" });
+
+        socket.on("receive_message", (message) => {
+            const messagesList = document.getElementById("messages");
+            const newMessage = document.createElement("li");
+            newMessage.textContent = message;
+            messagesList.appendChild(newMessage);
+        });
+
+        // Handle "clear" event
+        socket.on("clear", () => {
+            const messagesList = document.getElementById("messages");
+            messagesList.innerHTML = ""; // Clear messages from the list
+        });
+
+        // Listen for receiver presence updates
+        socket.on("room_status", (status) => {
+            if (status.receiverPresent) {
+                sendBtn.disabled = false;
+                clearBtn.disabled = false;
+            } else {
+                alert("Receiver has left the room. Redirecting to the home page.");
+                window.location.href = "/";
+            }
+        });
+
+        function sendMessage() {
+            const message = document.getElementById("message").value;
+            socket.emit("send_message", { room, message });
+        }
+
+        function clearMessages() {
+            socket.emit("clear_messages", { room }); // Broadcast clear event
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class List</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(120deg, #f6d365, #fda085);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #FF6F61;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        button {
+            background-color: #FF6F61;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #e65a50;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 10px;
+            width: 80%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Class List</h1>
+        <ul>
+            {% for class in classes %}
+                <li>
+                    <strong>{{ class.name }}</strong>
+                    <div>
+                        <button onclick="handleRole('{{ class.room }}', 'sender')">Sender</button>
+                        <button onclick="handleRole('{{ class.room }}', 'receiver')">Receiver</button>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <p id="modalMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        function handleRole(room, role) {
+            fetch(`/join_class?room=${room}&role=${role}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else if (data.message) {
+                        showModal(data.message);
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+        }
+
+        function showModal(message) {
+            const modal = document.getElementById("myModal");
+            const modalMessage = document.getElementById("modalMessage");
+            modalMessage.innerText = message;
+            modal.style.display = "block";
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("myModal");
+            modal.style.display = "none";
+        }
+    </script>
+</body>
+</html>

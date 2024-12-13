@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receiver</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.3/socket.io.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(120deg, #f093fb, #f5576c);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #f5576c;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 1rem;
+            background: #f9f9f9;
+        }
+
+        li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        li:last-child {
+            border-bottom: none;
+        }
+
+        /* Scrollbar styling */
+        ul::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ul::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 5px;
+        }
+
+        ul::-webkit-scrollbar-thumb {
+            background: #f5576c;
+            border-radius: 5px;
+        }
+
+        ul::-webkit-scrollbar-thumb:hover {
+            background: #d04757;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Receiver Page</h1>
+        <ul id="messages"></ul>
+    </div>
+
+    <script>
+        const socket = io();
+        const params = new URLSearchParams(window.location.search);
+        const room = params.get('room');
+
+        socket.emit("join_room", { room, role: "receiver" });
+
+        socket.on("receive_message", (message) => {
+            const messagesList = document.getElementById("messages");
+            const newMessage = document.createElement("li");
+            newMessage.textContent = message;
+            messagesList.appendChild(newMessage);
+        });
+
+        // Handle "clear" event
+        socket.on("clear", () => {
+            const messagesList = document.getElementById("messages");
+            messagesList.innerHTML = ""; // Clear messages from the list
+        });
+
+        // Fetch existing messages on page load
+        socket.on("message_history", (messages) => {
+            const messagesList = document.getElementById("messages");
+            messagesList.innerHTML = ""; // Clear the current list
+            messages.forEach((message) => {
+                const newMessage = document.createElement("li");
+                newMessage.textContent = message;
+                messagesList.appendChild(newMessage);
+            });
+        });
+
+        socket.emit("get_messages", { room }); // Fetch message history
+    </script>
+</body>
+</html>
